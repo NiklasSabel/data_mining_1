@@ -1,7 +1,7 @@
 Data_Mining_1
 ==============================
 
-A short description of the project.
+Teamproject in Data Mining 1.
 
 Project Organization
 ------------
