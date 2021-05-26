@@ -12,12 +12,21 @@ def features(df):
 
          """
     # get the mean damage grade of different geo_levels
-    a = df.groupby(['geo_level_1_id']).mean()['damage_grade']
-    b = df.groupby(['geo_level_2_id']).mean()['damage_grade']
-    df = df.merge(a, on='geo_level_1_id', how='left').rename(
-        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_geo_1"}).merge(b, on='geo_level_2_id',
+    df = df.merge(df.groupby(['geo_level_1_id']).mean()['damage_grade'], on='geo_level_1_id', how='left').rename(
+        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_geo_1"}).merge(df.groupby(['geo_level_2_id']).mean()['damage_grade'], on='geo_level_2_id',
                                                                                               how='left').rename(
         columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_geo_2"})
+    df = df.merge(df.groupby(['foundation_type']).mean()['damage_grade'], on='foundation_type', how='left').rename(
+        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_fnd_t"})
+    df = df.merge(df.groupby(['roof_type']).mean()['damage_grade'], on='roof_type', how='left').rename(
+        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_roof_t"})
+    df = df.merge(df.groupby(['ground_floor_type']).mean()['damage_grade'], on='ground_floor_type', how='left').rename(
+        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_ground_t"})
+    df = df.merge(df.groupby(['other_floor_type']).mean()['damage_grade'], on='other_floor_type', how='left').rename(
+        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_other_floor_t"})
+    df = df.merge(df.groupby(['legal_ownership_status']).mean()['damage_grade'], on='legal_ownership_status',
+                  how='left').rename(
+        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_own_status_t"})
     # list all categorical features that we want to encode using OneHotEncoder
     categorical_features = ['land_surface_condition', 'foundation_type', 'roof_type', 'ground_floor_type',
                             'other_floor_type', 'position', 'plan_configuration', 'legal_ownership_status']
