@@ -87,6 +87,8 @@ def feature_engineering_geo_3(df):
     df.loc[(df['age'] >= 100), 'age_ue_100'] = 1
     df.loc[(df['age'] < 100), 'age_ue_100'] = 0
 
+
+
     ## Adding 2 dummies indicating geo_leovels with high and low mud_mortar_stone - share
     # low
     # high
@@ -206,6 +208,22 @@ def feature_engineering_geo_3(df):
     scale_features = ['geo_level_1_id', 'geo_level_2_id', 'geo_level_3_id', 'age']
     df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
 
+    # adding ft_importance_1
+
+    df.loc[(df['has_superstructure_rc_non_engineered'] == 1) | (df['has_superstructure_rc_engineered'] == 1) |
+           (df['has_secondary_use'] == 1) | (df['has_secondary_use_hotel'] == 1) |
+           (df['foundation_type_u'] == 1) | (df['foundation_type_w'] == 1) | (df['roof_type_x'] == 1) |
+           (df['other_floor_type_s'] == 1), 'ft_imp_1_pos'] = 1
+    df.loc[(df['has_superstructure_rc_non_engineered'] != 1) & (df['has_superstructure_rc_engineered'] != 1) &
+           (df['has_secondary_use'] != 1) & (df['has_secondary_use_hotel'] != 1) &
+           (df['foundation_type_u'] != 1) & (df['foundation_type_w'] != 1)
+           & (df['roof_type_x'] != 1) & (df['other_floor_type_s'] == 1), 'ft_imp_1_pos'] = 0
+
+    df.loc[(df['has_superstructure_cement_mortar_brick'] == 1) | (df['ground_floor_type_v'] == 1) |
+           (df['other_floor_type_j'] == 1), 'ft_high_imp_1_pos'] = 1
+    df.loc[(df['has_superstructure_cement_mortar_brick'] != 1) & (df['ground_floor_type_v'] != 1) &
+           (df['other_floor_type_j'] != 1), 'ft_high_imp_1_pos'] = 0
+
     return df
 
 
@@ -293,13 +311,20 @@ def feature_engineering_geo_4(df):
                            'other_floor_type_s']
     ft_high_importance_1_pos = ['has_superstructure_cement_mortar_brick', 'ground_floor_type_w', 'other_floor_type_j']
 
-    for feature in ft_importance_1_pos:
-        df.loc[(df[feature] == 1), 'ft_imp_1_pos'] = 1
-        df.loc[(df[feature] != 1), 'ft_imp_1_pos'] = 0
+    df.loc[(df['has_superstructure_rc_non_engineered'] == 1) | (df['has_superstructure_rc_engineered'] == 1) |
+           (df['has_secondary_use'] == 1) | (df['has_secondary_use_hotel'] == 1) |
+           (df['foundation_type_u'] == 1) | (df['foundation_type_w'] == 1) | (df['roof_type_x'] ==1) |
+            (df['other_floor_type_s'] == 1), 'ft_imp_1_pos'] = 1
+    df.loc[(df['has_superstructure_rc_non_engineered'] != 1) & (df['has_superstructure_rc_engineered'] != 1) &
+           (df['has_secondary_use'] != 1) & (df['has_secondary_use_hotel'] != 1) &
+           (df['foundation_type_u'] != 1) & (df['foundation_type_w'] != 1)
+            &(df['roof_type_x'] != 1) & (df['other_floor_type_s']==1) ,'ft_imp_1_pos'] = 0
 
-    for feature in ft_high_importance_1_pos:
-        df.loc[(df[feature] == 1), 'ft_high_imp_1_pos'] = 1
-        df.loc[(df[feature] != 1), 'ft_high_imp_1_pos'] = 0
+    df.loc[(df['has_superstructure_cement_mortar_brick'] == 1) | (df['ground_floor_type_v'] == 1) |
+           (df['other_floor_type_j'] == 1) , 'ft_high_imp_1_pos'] = 1
+    df.loc[(df['has_superstructure_cement_mortar_brick'] != 1) & (df['ground_floor_type_v'] != 1) &
+           (df['other_floor_type_j'] != 1) , 'ft_high_imp_1_pos'] = 0
+
 
     ## Adding 2 dummies indicating geo_leovels with high and low mud_mortar_stone - share
     # low
