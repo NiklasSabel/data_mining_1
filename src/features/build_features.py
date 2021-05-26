@@ -425,7 +425,7 @@ def feature_engineering_geo_4(df):
 
 
 
-def drop_unnecessary_ft (df):
+def get_unnecessary_ft (df):
     dmg = df.groupby('damage_grade').agg({'damage_grade': 'count'})
     df = df.groupby('damage_grade').sum()
     df = df.join(dmg)
@@ -442,5 +442,8 @@ def drop_unnecessary_ft (df):
         if len(liste) == 0:
             unnecessary_ft.append(df.index[i])
 
-    df = df.drop(columns=[unnecessary_ft])
-    return unnecessary_ft, df
+    return unnecessary_ft
+
+def drop_unnecessary_ft(df):
+    df = df.drop(columns=get_unnecessary_ft(df), axis=1)
+    return df
