@@ -79,6 +79,121 @@ def feature_engineering(df):
     df.loc[(df['age'] >= 100), 'age_ue_100'] = 1
     df.loc[(df['age'] < 100), 'age_ue_100'] = 0
 
+    ## Adding 2 dummies indicating geo_leovels with high and low mud_mortar_stone - share
+    # low
+    # high
+
+    low_mortar_percentage = []
+    high_mortar_percentage = []
+
+    for i in range(1, 31):
+        geolvl_count = df[df['geo_level_1_id'] == i]['geo_level_1_id'].value_counts().item()
+        mortar = df[df['geo_level_1_id'] == i]['has_superstructure_mud_mortar_stone'].sum()
+
+        mortar_percentage = (mortar / geolvl_count)
+
+        if mortar_percentage < 0.6:
+            low_mortar_percentage.append(i)
+        else:
+            high_mortar_percentage.append(i)
+
+    # dummy creation
+
+    column_low = []
+    for val in df['geo_level_1_id']:
+        if val in low_mortar_percentage:
+            column_low.append(1)
+        else:
+            column_low.append(0)
+
+    column_high = []
+    for val in df['geo_level_1_id']:
+        if val in high_mortar_percentage:
+            column_high.append(1)
+        else:
+            column_high.append(0)
+
+    df['low_mortar_percentage'] = column_low
+
+    df['high_mortar_percentage'] = column_high
+
+    # Identity regions with high share of foundation type r -->assumption high damage
+
+    low_percentage_r = []
+    high_percentage_r = []
+
+    for i in range(1, 31):
+        geolvl_count = df[df['geo_level_1_id'] == i]['geo_level_1_id'].value_counts().item()
+        type_r = df[df['geo_level_1_id'] == i]['foundation_type_r'].sum()
+
+        percentage = ((type_r) / geolvl_count)
+
+        if percentage < 0.6:
+            low_percentage_r.append(i)
+
+        else:
+            high_percentage_r.append(i)
+
+    # dummy creation
+
+    column_low = []
+    for val in df['geo_level_1_id']:
+        if val in low_percentage_r:
+            column_low.append(1)
+        else:
+            column_low.append(0)
+
+    column_high = []
+    for val in df['geo_level_1_id']:
+        if val in high_percentage_r:
+            column_high.append(1)
+        else:
+            column_high.append(0)
+
+    df['low_percentage_r'] = column_low
+
+    df['high_percentage_r'] = column_high
+
+    # Define ``stable`` and ``fragile`` constructions
+
+    # Create dummies
+
+    # create fragile construction dummy
+    df.loc[(df['foundation_type_r'] == 1) & (df['ground_floor_type_v'] == 1) & (
+            df['roof_type_n'] == 1), 'fragile'] = 1
+    df.loc[(df['foundation_type_r'] == 1) & (df['ground_floor_type_v'] == 1) & (
+            df['roof_type_n'] == 0), 'fragile'] = 1
+    df.loc[(df['foundation_type_r'] == 1) & (df['ground_floor_type_v'] == 0) & (
+            df['roof_type_n'] == 1), 'fragile'] = 1
+    df.loc[(df['foundation_type_r'] == 0) & (df['ground_floor_type_v'] == 1) & (
+            df['roof_type_n'] == 1), 'fragile'] = 1
+    df.loc[(df['foundation_type_r'] == 1) & (df['ground_floor_type_v'] == 0) & (
+            df['roof_type_n'] == 0), 'fragile'] = 0
+    df.loc[(df['foundation_type_r'] == 0) & (df['ground_floor_type_v'] == 1) & (
+            df['roof_type_n'] == 0), 'fragile'] = 0
+    df.loc[(df['foundation_type_r'] == 0) & (df['ground_floor_type_v'] == 0) & (
+            df['roof_type_n'] == 1), 'fragile'] = 0
+    df.loc[(df['foundation_type_r'] == 0) & (df['ground_floor_type_v'] == 0) & (
+            df['roof_type_n'] == 0), 'fragile'] = 0
+
+    # create stable construction dummy
+    df.loc[(df['foundation_type_i'] == 1) & (df['has_superstructure_rc_engineered'] == 1) & (
+            df['roof_type_x'] == 1), 'stable'] = 1
+    df.loc[(df['foundation_type_i'] == 1) & (df['has_superstructure_rc_engineered'] == 1) & (
+            df['roof_type_x'] == 0), 'stable'] = 1
+    df.loc[(df['foundation_type_i'] == 1) & (df['has_superstructure_rc_engineered'] == 0) & (
+            df['roof_type_x'] == 1), 'stable'] = 1
+    df.loc[(df['foundation_type_i'] == 0) & (df['has_superstructure_rc_engineered'] == 1) & (
+            df['roof_type_x'] == 1), 'stable'] = 1
+    df.loc[(df['foundation_type_i'] == 1) & (df['has_superstructure_rc_engineered'] == 0) & (
+            df['roof_type_x'] == 0), 'stable'] = 0
+    df.loc[(df['foundation_type_i'] == 0) & (df['has_superstructure_rc_engineered'] == 1) & (
+            df['roof_type_x'] == 0), 'stable'] = 0
+    df.loc[(df['foundation_type_i'] == 0) & (df['has_superstructure_rc_engineered'] == 0) & (
+            df['roof_type_x'] == 1), 'stable'] = 0
+    df.loc[(df['foundation_type_i'] == 0) & (df['has_superstructure_rc_engineered'] == 0) & (
+            df['roof_type_x'] == 0), 'stable'] = 0
+
     # rescale age and geo_features after generating dummy features
     scale_features = ['geo_level_1_id', 'geo_level_2_id', 'geo_level_3_id', 'age']
     df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
