@@ -307,12 +307,11 @@ def feature_engineering_geo_4(df):
     low_mortar_percentage = []
     high_mortar_percentage = []
 
-<<<<<<< HEAD
 
-    for i in range(1, 31):
-=======
+
+
     for i in range(0, 31):
->>>>>>> b0a8dfb8a6be1872dfa2acecc293fba05c82772a
+
         geolvl_count = df[df['geo_level_1_id'] == i]['geo_level_1_id'].value_counts().item()
         mortar = df[df['geo_level_1_id'] == i]['has_superstructure_mud_mortar_stone'].sum()
 
@@ -443,4 +442,5 @@ def drop_unnecessary_ft (df):
         if len(liste) == 0:
             unnecessary_ft.append(df.index[i])
 
-    return unnecessary_ft
+    df = df.drop(column=[unnecessary_ft])
+    return unnecessary_ft, df
