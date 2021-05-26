@@ -292,12 +292,30 @@ def feature_engineering_geo_4(df):
     df.loc[(df['age'] >= 100), 'age_ue_100'] = 1
     df.loc[(df['age'] < 100), 'age_ue_100'] = 0
 
+    # Adding ft_importance 1
+    ft_importance_1_neg = ['has_superstructure_mud_mortar_stone', 'foundation_type_r', 'roof_type_n',
+                           'ground_floor_type_f',
+                           'other_floor_type_q']
+    ft_importance_1_pos = ['has_superstructure_rc_non_engineered', 'has_superstructure_rc_engineered',
+                           'has_secondary_use',
+                           'has_secondary_use_hotel', 'foundation_type_u', 'foundation_type_w', 'roof_type_x',
+                           'other_floor_type_s']
+    ft_high_importance_1_pos = ['has_superstructure_cement_mortar_brick', 'ground_floor_type_w', 'other_floor_type_j']
+
+    for feature in ft_importance_1_pos:
+        df.loc[(df[feature] == 1), 'ft_imp_1_pos'] = 1
+        df.loc[(df[feature] != 1), 'ft_imp_1_pos'] = 0
+
+    for feature in ft_high_importance_1_pos:
+        df.loc[(df[feature] == 1), 'ft_high_imp_1_pos'] = 1
+        df.loc[(df[feature] != 1), 'ft_high_imp_1_pos'] = 0
+
     ## Adding 2 dummies indicating geo_leovels with high and low mud_mortar_stone - share
     # low
     # high
-
     low_mortar_percentage = []
     high_mortar_percentage = []
+
 
     for i in range(1, 31):
         geolvl_count = df[df['geo_level_1_id'] == i]['geo_level_1_id'].value_counts().item()
@@ -411,4 +429,23 @@ def feature_engineering_geo_4(df):
     scale_features = ['geo_level_1_id', 'geo_level_2_id', 'geo_level_3_id', 'age']
     df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
 
-    return df
+
+
+def drop_unnecessary_ft (df):
+    dmg = df.groupby('damage_grade').agg({'damage_grade': 'count'})
+    df = df.groupby('damage_grade').sum()
+    df = df.join(dmg)
+    df = df.iloc[:, :-1].div(df.damage_grade, axis=0)
+    df = df.transpose()
+
+    unnecessary_ft = []
+    for i in range(df.shape[0]):  # rows
+        liste = []
+        for j in range(df.shape[1]):  # columns
+            value = df.iloc[i, j]
+            if value > 0.01:
+                liste.append(value)
+        if len(liste) == 0:
+            unnecessary_ft.append(df.index[i])
+
+    return unnecessary_ft
