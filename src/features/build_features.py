@@ -442,5 +442,5 @@ def drop_unnecessary_ft (df):
         if len(liste) == 0:
             unnecessary_ft.append(df.index[i])
 
-    df = df.drop(column=[unnecessary_ft])
+    df = df.drop(columns=[unnecessary_ft])
     return unnecessary_ft, df
