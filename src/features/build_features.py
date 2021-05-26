@@ -11,22 +11,12 @@ def features(df):
              df (numpy.array): raw dataframe
 
          """
-    # get the mean damage grade of different geo_levels
-    df = df.merge(df.groupby(['geo_level_1_id']).mean()['damage_grade'], on='geo_level_1_id', how='left').rename(
-        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_geo_1"}).merge(df.groupby(['geo_level_2_id']).mean()['damage_grade'], on='geo_level_2_id',
-                                                                                              how='left').rename(
-        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_geo_2"})
-    df = df.merge(df.groupby(['foundation_type']).mean()['damage_grade'], on='foundation_type', how='left').rename(
-        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_fnd_t"})
-    df = df.merge(df.groupby(['roof_type']).mean()['damage_grade'], on='roof_type', how='left').rename(
-        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_roof_t"})
-    df = df.merge(df.groupby(['ground_floor_type']).mean()['damage_grade'], on='ground_floor_type', how='left').rename(
-        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_ground_t"})
-    df = df.merge(df.groupby(['other_floor_type']).mean()['damage_grade'], on='other_floor_type', how='left').rename(
-        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_other_floor_t"})
-    df = df.merge(df.groupby(['legal_ownership_status']).mean()['damage_grade'], on='legal_ownership_status',
-                  how='left').rename(
-        columns={"damage_grade_x": 'damage_grade', "damage_grade_y": "mean_dmg_own_status_t"})
+    # get the mean damage grade of selected categorical variables
+    feature_list = ['geo_level_1_id', 'geo_level_2_id', 'foundation_type', 'roof_type', 'ground_floor_type',
+                    'other_floor_type', 'legal_ownership_status']
+    for feature in feature_list:
+        df = df.merge(df.groupby([feature]).mean()['damage_grade'], on=feature, how='left').rename(
+            columns={"damage_grade_x": 'damage_grade', "damage_grade_y": f'mean_dmg{feature}'})
     # list all categorical features that we want to encode using OneHotEncoder
     categorical_features = ['land_surface_condition', 'foundation_type', 'roof_type', 'ground_floor_type',
                             'other_floor_type', 'position', 'plan_configuration', 'legal_ownership_status']
@@ -52,42 +42,42 @@ def feature_engineering_geo_3(df):
 
     # Creation of dummy features degree of destruction of the different districts
     df.loc[(df['geo_level_1_id'] == 6) |
-                     (df['geo_level_1_id'] == 10) | (df['geo_level_1_id'] == 13) |
-                     (df['geo_level_1_id'] == 20) | (df['geo_level_1_id'] == 26)
+           (df['geo_level_1_id'] == 10) | (df['geo_level_1_id'] == 13) |
+           (df['geo_level_1_id'] == 20) | (df['geo_level_1_id'] == 26)
     , 'district_class_1'] = 1
     df.loc[(df['geo_level_1_id'] != 6) &
-                     (df['geo_level_1_id'] != 10) & (df['geo_level_1_id'] != 13) &
-                     (df['geo_level_1_id'] != 20) & (df['geo_level_1_id'] != 26)
+           (df['geo_level_1_id'] != 10) & (df['geo_level_1_id'] != 13) &
+           (df['geo_level_1_id'] != 20) & (df['geo_level_1_id'] != 26)
     , 'district_class_1'] = 0
 
     df.loc[(df['geo_level_1_id'] == 3) | (df['geo_level_1_id'] == 4) |
-                     (df['geo_level_1_id'] == 6) | (df['geo_level_1_id'] == 7) |
-                     (df['geo_level_1_id'] == 8) | (df['geo_level_1_id'] == 10) |
-                     (df['geo_level_1_id'] == 11) | (df['geo_level_1_id'] == 13) |
-                     (df['geo_level_1_id'] == 20) | (df['geo_level_1_id'] == 21) |
-                     (df['geo_level_1_id'] == 22) | (df['geo_level_1_id'] == 25) |
-                     (df['geo_level_1_id'] == 26) | (
-                                 df['geo_level_1_id'] == 27), 'district_class_2'] = 1
+           (df['geo_level_1_id'] == 6) | (df['geo_level_1_id'] == 7) |
+           (df['geo_level_1_id'] == 8) | (df['geo_level_1_id'] == 10) |
+           (df['geo_level_1_id'] == 11) | (df['geo_level_1_id'] == 13) |
+           (df['geo_level_1_id'] == 20) | (df['geo_level_1_id'] == 21) |
+           (df['geo_level_1_id'] == 22) | (df['geo_level_1_id'] == 25) |
+           (df['geo_level_1_id'] == 26) | (
+                   df['geo_level_1_id'] == 27), 'district_class_2'] = 1
 
     df.loc[(df['geo_level_1_id'] != 3) & (df['geo_level_1_id'] != 4) &
-                     (df['geo_level_1_id'] != 6) & (df['geo_level_1_id'] != 7) &
-                     (df['geo_level_1_id'] != 8) & (df['geo_level_1_id'] != 10) &
-                     (df['geo_level_1_id'] != 11) & (df['geo_level_1_id'] != 13) &
-                     (df['geo_level_1_id'] != 20) & (df['geo_level_1_id'] != 21) &
-                     (df['geo_level_1_id'] != 22) & (df['geo_level_1_id'] != 25) &
-                     (df['geo_level_1_id'] != 26) & (
-                                 df['geo_level_1_id'] != 27), 'district_class_2'] = 0
+           (df['geo_level_1_id'] != 6) & (df['geo_level_1_id'] != 7) &
+           (df['geo_level_1_id'] != 8) & (df['geo_level_1_id'] != 10) &
+           (df['geo_level_1_id'] != 11) & (df['geo_level_1_id'] != 13) &
+           (df['geo_level_1_id'] != 20) & (df['geo_level_1_id'] != 21) &
+           (df['geo_level_1_id'] != 22) & (df['geo_level_1_id'] != 25) &
+           (df['geo_level_1_id'] != 26) & (
+                   df['geo_level_1_id'] != 27), 'district_class_2'] = 0
 
     df.loc[(df['geo_level_1_id'] == 6) | (df['geo_level_1_id'] == 7) |
-                     (df['geo_level_1_id'] == 8) | (df['geo_level_1_id'] == 10) |
-                     (df['geo_level_1_id'] == 11) | (df['geo_level_1_id'] == 17) |
-                     (df['geo_level_1_id'] == 21) | (
-                                 df['geo_level_1_id'] == 27), 'district_class_3'] = 1
+           (df['geo_level_1_id'] == 8) | (df['geo_level_1_id'] == 10) |
+           (df['geo_level_1_id'] == 11) | (df['geo_level_1_id'] == 17) |
+           (df['geo_level_1_id'] == 21) | (
+                   df['geo_level_1_id'] == 27), 'district_class_3'] = 1
     df.loc[(df['geo_level_1_id'] != 6) & (df['geo_level_1_id'] != 7) &
-                     (df['geo_level_1_id'] != 8) & (df['geo_level_1_id'] != 10) &
-                     (df['geo_level_1_id'] != 11) & (df['geo_level_1_id'] != 17) &
-                     (df['geo_level_1_id'] != 21) & (
-                                 df['geo_level_1_id'] != 27), 'district_class_3'] = 0
+           (df['geo_level_1_id'] != 8) & (df['geo_level_1_id'] != 10) &
+           (df['geo_level_1_id'] != 11) & (df['geo_level_1_id'] != 17) &
+           (df['geo_level_1_id'] != 21) & (
+                   df['geo_level_1_id'] != 27), 'district_class_3'] = 0
 
     # Creation of dummy features on the age of the buildings
     df.loc[(df['age'] <= 40), 'age_u_40'] = 1
@@ -104,7 +94,7 @@ def feature_engineering_geo_3(df):
     low_mortar_percentage = []
     high_mortar_percentage = []
 
-    for i in range(1, 31):
+    for i in range(0, 31):
         geolvl_count = df[df['geo_level_1_id'] == i]['geo_level_1_id'].value_counts().item()
         mortar = df[df['geo_level_1_id'] == i]['has_superstructure_mud_mortar_stone'].sum()
 
@@ -140,7 +130,7 @@ def feature_engineering_geo_3(df):
     low_percentage_r = []
     high_percentage_r = []
 
-    for i in range(1, 31):
+    for i in range(0, 31):
         geolvl_count = df[df['geo_level_1_id'] == i]['geo_level_1_id'].value_counts().item()
         type_r = df[df['geo_level_1_id'] == i]['foundation_type_r'].sum()
 
@@ -178,39 +168,39 @@ def feature_engineering_geo_3(df):
 
     # create fragile construction dummy
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 1) & (
-                df['ground_floor_type_f'] == 1), 'fragile'] = 1
+            df['ground_floor_type_f'] == 1), 'fragile'] = 1
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 1) & (
-                df['ground_floor_type_f'] == 0), 'fragile'] = 1
+            df['ground_floor_type_f'] == 0), 'fragile'] = 1
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 0) & (
-                df['ground_floor_type_f'] == 1), 'fragile'] = 1
+            df['ground_floor_type_f'] == 1), 'fragile'] = 1
     df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 1) & (
-                df['ground_floor_type_f'] == 1), 'fragile'] = 1
+            df['ground_floor_type_f'] == 1), 'fragile'] = 1
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 0) & (
-                df['ground_floor_type_f'] == 0), 'fragile'] = 0
+            df['ground_floor_type_f'] == 0), 'fragile'] = 0
     df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 1) & (
-                df['ground_floor_type_f'] == 0), 'fragile'] = 0
+            df['ground_floor_type_f'] == 0), 'fragile'] = 0
     df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 0) & (
-                df['ground_floor_type_f'] == 1), 'fragile'] = 0
+            df['ground_floor_type_f'] == 1), 'fragile'] = 0
     df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 0) & (
-                df['ground_floor_type_f'] == 0), 'fragile'] = 0
+            df['ground_floor_type_f'] == 0), 'fragile'] = 0
 
     # create stable construction dummy
     df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 1) & (
-                df['roof_type_x'] == 1), 'stable'] = 1
+            df['roof_type_x'] == 1), 'stable'] = 1
     df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 1) & (
-                df['roof_type_x'] == 0), 'stable'] = 1
+            df['roof_type_x'] == 0), 'stable'] = 1
     df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 0) & (
-                df['roof_type_x'] == 1), 'stable'] = 1
+            df['roof_type_x'] == 1), 'stable'] = 1
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 1) & (
-                df['roof_type_x'] == 1), 'stable'] = 1
+            df['roof_type_x'] == 1), 'stable'] = 1
     df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 0) & (
-                df['roof_type_x'] == 0), 'stable'] = 0
+            df['roof_type_x'] == 0), 'stable'] = 0
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 1) & (
-                df['roof_type_x'] == 0), 'stable'] = 0
+            df['roof_type_x'] == 0), 'stable'] = 0
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 0) & (
-                df['roof_type_x'] == 1), 'stable'] = 0
+            df['roof_type_x'] == 1), 'stable'] = 0
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 0) & (
-                df['roof_type_x'] == 0), 'stable'] = 0
+            df['roof_type_x'] == 0), 'stable'] = 0
 
     # rescale age and geo_features after generating dummy features
     scale_features = ['geo_level_1_id', 'geo_level_2_id', 'geo_level_3_id', 'age']
@@ -237,6 +227,7 @@ def split_data(df):
     test_data = df.loc[df.damage_grade.isna()].drop(columns='damage_grade')
 
     return train_data, train_target, test_data
+
 
 def feature_engineering_geo_4(df):
     """ Function to generate additional features.
@@ -316,8 +307,12 @@ def feature_engineering_geo_4(df):
     low_mortar_percentage = []
     high_mortar_percentage = []
 
+<<<<<<< HEAD
 
     for i in range(1, 31):
+=======
+    for i in range(0, 31):
+>>>>>>> b0a8dfb8a6be1872dfa2acecc293fba05c82772a
         geolvl_count = df[df['geo_level_1_id'] == i]['geo_level_1_id'].value_counts().item()
         mortar = df[df['geo_level_1_id'] == i]['has_superstructure_mud_mortar_stone'].sum()
 
@@ -353,7 +348,7 @@ def feature_engineering_geo_4(df):
     low_percentage_r = []
     high_percentage_r = []
 
-    for i in range(1, 31):
+    for i in range(0, 31):
         geolvl_count = df[df['geo_level_1_id'] == i]['geo_level_1_id'].value_counts().item()
         type_r = df[df['geo_level_1_id'] == i]['foundation_type_r'].sum()
 
@@ -391,39 +386,39 @@ def feature_engineering_geo_4(df):
 
     # create fragile construction dummy
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 1) & (
-                df['ground_floor_type_f'] == 1), 'fragile'] = 1
+            df['ground_floor_type_f'] == 1), 'fragile'] = 1
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 1) & (
-                df['ground_floor_type_f'] == 0), 'fragile'] = 1
+            df['ground_floor_type_f'] == 0), 'fragile'] = 1
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 0) & (
-                df['ground_floor_type_f'] == 1), 'fragile'] = 1
+            df['ground_floor_type_f'] == 1), 'fragile'] = 1
     df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 1) & (
-                df['ground_floor_type_f'] == 1), 'fragile'] = 1
+            df['ground_floor_type_f'] == 1), 'fragile'] = 1
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 0) & (
-                df['ground_floor_type_f'] == 0), 'fragile'] = 0
+            df['ground_floor_type_f'] == 0), 'fragile'] = 0
     df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 1) & (
-                df['ground_floor_type_f'] == 0), 'fragile'] = 0
+            df['ground_floor_type_f'] == 0), 'fragile'] = 0
     df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 0) & (
-                df['ground_floor_type_f'] == 1), 'fragile'] = 0
+            df['ground_floor_type_f'] == 1), 'fragile'] = 0
     df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 0) & (
-                df['ground_floor_type_f'] == 0), 'fragile'] = 0
+            df['ground_floor_type_f'] == 0), 'fragile'] = 0
 
     # create stable construction dummy
     df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 1) & (
-                df['roof_type_x'] == 1), 'stable'] = 1
+            df['roof_type_x'] == 1), 'stable'] = 1
     df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 1) & (
-                df['roof_type_x'] == 0), 'stable'] = 1
+            df['roof_type_x'] == 0), 'stable'] = 1
     df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 0) & (
-                df['roof_type_x'] == 1), 'stable'] = 1
+            df['roof_type_x'] == 1), 'stable'] = 1
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 1) & (
-                df['roof_type_x'] == 1), 'stable'] = 1
+            df['roof_type_x'] == 1), 'stable'] = 1
     df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 0) & (
-                df['roof_type_x'] == 0), 'stable'] = 0
+            df['roof_type_x'] == 0), 'stable'] = 0
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 1) & (
-                df['roof_type_x'] == 0), 'stable'] = 0
+            df['roof_type_x'] == 0), 'stable'] = 0
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 0) & (
-                df['roof_type_x'] == 1), 'stable'] = 0
+            df['roof_type_x'] == 1), 'stable'] = 0
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 0) & (
-                df['roof_type_x'] == 0), 'stable'] = 0
+            df['roof_type_x'] == 0), 'stable'] = 0
 
     # rescale age and geo_features after generating dummy features
     scale_features = ['geo_level_1_id', 'geo_level_2_id', 'geo_level_3_id', 'age']
