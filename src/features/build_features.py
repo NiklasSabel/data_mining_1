@@ -10,12 +10,6 @@ def features(df):
     :return: preprocessed dataframe with OneHotEncoder, MinMaxScaler/StandardScaler,
     """
 
-    # get the mean damage grade of selected categorical variables
-    feature_list = ['geo_level_1_id', 'geo_level_2_id', 'foundation_type', 'roof_type', 'ground_floor_type',
-                    'other_floor_type', 'legal_ownership_status']
-    for feature in feature_list:
-        df = df.merge(df.groupby([feature]).mean()['damage_grade'], on=feature, how='left').rename(
-            columns={"damage_grade_x": 'damage_grade', "damage_grade_y": f'mean_dmg{feature}'})
 
     # list all categorical features that we want to encode using OneHotEncoder
     categorical_features = ['land_surface_condition', 'foundation_type', 'roof_type', 'ground_floor_type',
@@ -221,8 +215,15 @@ def feature_engineering(df,geo_district_nu):
     df[['ft_imp_1_pos', 'ft_high_imp_1_pos']] = df[['ft_imp_1_pos', 'ft_high_imp_1_pos']].fillna(0)
 
     # rescale age and geo_features after generating dummy features
-    scale_features = ['geo_level_1_id', 'geo_level_2_id', 'geo_level_3_id', 'age']
+    scale_features = ['geo_level_2_id', 'geo_level_3_id', 'age']
     df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
+
+    # list all categorical features that we want to encode using OneHotEncoder
+    categorical_features = ['geo_level_1_id']
+    encoder = OneHotEncoder()
+    encoded = pd.DataFrame(encoder.fit_transform(df[categorical_features]).toarray(),
+                           columns=encoder.get_feature_names(categorical_features))
+    df = df.drop(columns=categorical_features).join(encoded)
 
     return df
 
