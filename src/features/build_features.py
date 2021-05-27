@@ -1,22 +1,16 @@
-from sklearn.preprocessing import OneHotEncoder, MinMaxScaler, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 import numpy as np
 import pandas as pd
 
 
 def features(df):
-    """
-    Function to preprocess dataframe.
-    :param df: raw dataframe, type: pd.DataFrame()
-    :return: preprocessed dataframe with OneHotEncoder, MinMaxScaler/StandardScaler,
-    """
+    """ Function to preprocess dataframe.
+      Args:
+             df (numpy.array): raw dataframe
+      Returns:
+             df (numpy.array): raw dataframe
 
-    # get the mean damage grade of selected categorical variables
-    feature_list = ['geo_level_1_id', 'geo_level_2_id', 'foundation_type', 'roof_type', 'ground_floor_type',
-                    'other_floor_type', 'legal_ownership_status']
-    for feature in feature_list:
-        df = df.merge(df.groupby([feature]).mean()['damage_grade'], on=feature, how='left').rename(
-            columns={"damage_grade_x": 'damage_grade', "damage_grade_y": f'mean_dmg{feature}'})
-
+         """
     # list all categorical features that we want to encode using OneHotEncoder
     categorical_features = ['land_surface_condition', 'foundation_type', 'roof_type', 'ground_floor_type',
                             'other_floor_type', 'position', 'plan_configuration', 'legal_ownership_status']
@@ -27,7 +21,8 @@ def features(df):
 
     # list all numerical features that we want to re-scale
     numeric_features = ['count_floors_pre_eq', 'area_percentage', 'height_percentage', 'count_families']
-    df[numeric_features] = MinMaxScaler().fit_transform(df[numeric_features]) ###
+    df[numeric_features] = MinMaxScaler().fit_transform(df[numeric_features])
+    ###
     #df[numeric_features] = StandardScaler().fit_transform(df[numeric_features])
 
     return df
@@ -108,7 +103,11 @@ def feature_engineering(df,geo_district_nu):
     low_mortar_percentage = []
     high_mortar_percentage = []
 
+
+
+
     for i in range(0, 31):
+
         geolvl_count = df[df['geo_level_1_id'] == i]['geo_level_1_id'].value_counts().item()
         mortar = df[df['geo_level_1_id'] == i]['has_superstructure_mud_mortar_stone'].sum()
 
@@ -120,6 +119,7 @@ def feature_engineering(df,geo_district_nu):
             high_mortar_percentage.append(i)
 
     # dummy creation
+
     column_low = []
     for val in df['geo_level_1_id']:
         if val in low_mortar_percentage:
@@ -135,9 +135,11 @@ def feature_engineering(df,geo_district_nu):
             column_high.append(0)
 
     df['low_mortar_percentage'] = column_low
+
     df['high_mortar_percentage'] = column_high
 
-    # Creation of dummy features for identity regions with high share of foundation type r -> assumption high damage
+    # Identity regions with high share of foundation type r -->assumption high damage
+
     low_percentage_r = []
     high_percentage_r = []
 
@@ -149,10 +151,12 @@ def feature_engineering(df,geo_district_nu):
 
         if percentage < 0.6:
             low_percentage_r.append(i)
+
         else:
             high_percentage_r.append(i)
 
     # dummy creation
+
     column_low = []
     for val in df['geo_level_1_id']:
         if val in low_percentage_r:
@@ -168,9 +172,13 @@ def feature_engineering(df,geo_district_nu):
             column_high.append(0)
 
     df['low_percentage_r'] = column_low
+
     df['high_percentage_r'] = column_high
 
-    # Creation of dummy features for stable and fragile constructions
+    # Define ``stable`` and ``fragile`` constructions
+
+    # Create dummies
+
     # create fragile construction dummy
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 1) & (
             df['ground_floor_type_f'] == 1), 'fragile'] = 1
@@ -207,32 +215,38 @@ def feature_engineering(df,geo_district_nu):
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 0) & (
             df['roof_type_x'] == 0), 'stable'] = 0
 
+    # rescale age and geo_features after generating dummy features
+    # scale_features = ['geo_level_1_id', 'geo_level_2_id', 'geo_level_3_id', 'age']
+    # df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
 
-    # Creation of dummy features for indicating damage grade 1 further with ft_imp_1_pos and for very high importance
-    # ft_high_imp_1_pos
+    # Adding ft_importance 1
+    ft_importance_1_neg = ['has_superstructure_mud_mortar_stone', 'foundation_type_r', 'roof_type_n',
+                           'ground_floor_type_f',
+                           'other_floor_type_q']
+    ft_importance_1_pos = ['has_superstructure_rc_non_engineered', 'has_superstructure_rc_engineered',
+                           'has_secondary_use',
+                           'has_secondary_use_hotel', 'foundation_type_u', 'foundation_type_w', 'roof_type_x',
+                           'other_floor_type_s']
+    ft_high_importance_1_pos = ['has_superstructure_cement_mortar_brick', 'ground_floor_type_w', 'other_floor_type_j']
+
     df.loc[(df['has_superstructure_rc_non_engineered'] == 1) | (df['has_superstructure_rc_engineered'] == 1) |
            (df['has_secondary_use'] == 1) | (df['has_secondary_use_hotel'] == 1) |
            (df['foundation_type_u'] == 1) | (df['foundation_type_w'] == 1) | (df['roof_type_x'] == 1) |
            (df['other_floor_type_s'] == 1), 'ft_imp_1_pos'] = 1
+    df.loc[(df['has_superstructure_rc_non_engineered'] != 1) & (df['has_superstructure_rc_engineered'] != 1) &
+           (df['has_secondary_use'] != 1) & (df['has_secondary_use_hotel'] != 1) &
+           (df['foundation_type_u'] != 1) & (df['foundation_type_w'] != 1)
+           & (df['roof_type_x'] != 1) & (df['other_floor_type_s'] != 1), 'ft_imp_1_pos'] = 0
 
     df.loc[(df['has_superstructure_cement_mortar_brick'] == 1) | (df['ground_floor_type_v'] == 1) |
            (df['other_floor_type_j'] == 1), 'ft_high_imp_1_pos'] = 1
-
-    df[['ft_imp_1_pos', 'ft_high_imp_1_pos']] = df[['ft_imp_1_pos', 'ft_high_imp_1_pos']].fillna(0)
-
-    # rescale age and geo_features after generating dummy features
-    scale_features = ['geo_level_1_id', 'geo_level_2_id', 'geo_level_3_id', 'age']
-    df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
+    df.loc[(df['has_superstructure_cement_mortar_brick'] != 1) & (df['ground_floor_type_v'] != 1) &
+           (df['other_floor_type_j'] != 1), 'ft_high_imp_1_pos'] = 0
 
     return df
 
 
 def get_unnecessary_ft (df):
-    """
-    Function to get all unnecessary features which lay under a threshold of 0.01 relative occurrence per damage grade each
-    :param df: general dataframe
-    :return: list with all unnecessary features
-    """
     dmg = df.groupby('damage_grade').agg({'damage_grade': 'count'})
     df = df.groupby('damage_grade').sum()
     df = df.join(dmg)
@@ -240,9 +254,9 @@ def get_unnecessary_ft (df):
     df = df.transpose()
 
     unnecessary_ft = []
-    for i in range(df.shape[0]):  # iterate through rows
+    for i in range(df.shape[0]):  # rows
         liste = []
-        for j in range(df.shape[1]):  # iterate through columns
+        for j in range(df.shape[1]):  # columns
             value = df.iloc[i, j]
             if value > 0.01:
                 liste.append(value)
@@ -251,13 +265,6 @@ def get_unnecessary_ft (df):
 
     return unnecessary_ft
 
-
 def drop_unnecessary_ft(df):
-    """
-    Function to drop all unnecessary features which lay under a threshold of 0.01 relative occurrence per damage grade each
-    :param df: general dataframe
-    :return: dataframe without unnecessary features
-    """
     df = df.drop(columns=get_unnecessary_ft(df), axis=1)
-
     return df
