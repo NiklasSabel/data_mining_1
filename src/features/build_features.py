@@ -5,12 +5,11 @@ import pandas as pd
 
 def features(df):
     """ Function to preprocess dataframe.
-      Args:
-             df (numpy.array): raw dataframe
-      Returns:
-             df (numpy.array): raw dataframe
 
-         """
+    :param df: raw dataframe, type: pd.DataFrame()
+    :return: preprocessed dataframe with OneHotEncoder, MinMaxScaler/StandardScaler,
+    """
+
     # list all categorical features that we want to encode using OneHotEncoder
     categorical_features = ['land_surface_condition', 'foundation_type', 'roof_type', 'ground_floor_type',
                             'other_floor_type', 'position', 'plan_configuration', 'legal_ownership_status']
@@ -23,7 +22,7 @@ def features(df):
     numeric_features = ['count_floors_pre_eq', 'area_percentage', 'height_percentage', 'count_families']
     df[numeric_features] = MinMaxScaler().fit_transform(df[numeric_features])
     ###
-    #df[numeric_features] = StandardScaler().fit_transform(df[numeric_features])
+    # df[numeric_features] = StandardScaler().fit_transform(df[numeric_features])
 
     return df
 
@@ -38,7 +37,7 @@ def split_data(df):
     df = df.set_index('building_id')
 
     # split data back into train, label and test
-    train_data = df.loc[np.invert(df.damage_grade.isna())] # data where labels for damage grade are empty
+    train_data = df.loc[np.invert(df.damage_grade.isna())]  # data where labels for damage grade are empty
     train_target = train_data['damage_grade']
     train_data = train_data.drop(columns='damage_grade')
     test_data = df.loc[df.damage_grade.isna()].drop(columns='damage_grade')
@@ -46,7 +45,7 @@ def split_data(df):
     return train_data, train_target, test_data
 
 
-def feature_engineering(df,geo_district_nu):
+def feature_engineering(df, geo_district_nu):
     """
     Function to generate additional features.
     :param df: merged dataframe of preprocessed train, test and target data
@@ -102,9 +101,6 @@ def feature_engineering(df,geo_district_nu):
     # Creation of dummy features indicating geo_levels with high and low mud_mortar_stone
     low_mortar_percentage = []
     high_mortar_percentage = []
-
-
-
 
     for i in range(0, 31):
 
@@ -233,20 +229,27 @@ def feature_engineering(df,geo_district_nu):
            (df['has_secondary_use'] == 1) | (df['has_secondary_use_hotel'] == 1) |
            (df['foundation_type_u'] == 1) | (df['foundation_type_w'] == 1) | (df['roof_type_x'] == 1) |
            (df['other_floor_type_s'] == 1), 'ft_imp_1_pos'] = 1
-    df.loc[(df['has_superstructure_rc_non_engineered'] != 1) & (df['has_superstructure_rc_engineered'] != 1) &
-           (df['has_secondary_use'] != 1) & (df['has_secondary_use_hotel'] != 1) &
-           (df['foundation_type_u'] != 1) & (df['foundation_type_w'] != 1)
-           & (df['roof_type_x'] != 1) & (df['other_floor_type_s'] != 1), 'ft_imp_1_pos'] = 0
 
     df.loc[(df['has_superstructure_cement_mortar_brick'] == 1) | (df['ground_floor_type_v'] == 1) |
            (df['other_floor_type_j'] == 1), 'ft_high_imp_1_pos'] = 1
-    df.loc[(df['has_superstructure_cement_mortar_brick'] != 1) & (df['ground_floor_type_v'] != 1) &
-           (df['other_floor_type_j'] != 1), 'ft_high_imp_1_pos'] = 0
+
+    df[['ft_imp_1_pos', 'ft_high_imp_1_pos']] = df[['ft_imp_1_pos', 'ft_high_imp_1_pos']].fillna(0)
+
+    # rescale age and geo_features after generating dummy features
+    scale_features = ['geo_level_2_id', 'geo_level_3_id', 'age']
+    df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
+
+    # list all categorical features that we want to encode using OneHotEncoder
+    categorical_features = ['geo_level_1_id']
+    encoder = OneHotEncoder()
+    encoded = pd.DataFrame(encoder.fit_transform(df[categorical_features]).toarray(),
+                           columns=encoder.get_feature_names(categorical_features))
+    df = df.drop(columns=categorical_features).join(encoded)
 
     return df
 
 
-def get_unnecessary_ft (df):
+def get_unnecessary_ft(df):
     dmg = df.groupby('damage_grade').agg({'damage_grade': 'count'})
     df = df.groupby('damage_grade').sum()
     df = df.join(dmg)
@@ -264,6 +267,7 @@ def get_unnecessary_ft (df):
             unnecessary_ft.append(df.index[i])
 
     return unnecessary_ft
+
 
 def drop_unnecessary_ft(df):
     df = df.drop(columns=get_unnecessary_ft(df), axis=1)
