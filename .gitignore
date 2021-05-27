@@ -8,6 +8,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+venv/
 build/
 develop-eggs/
 dist/
@@ -64,7 +65,7 @@ target/
 *.rdb
 
 # Pycharm
-.idea
+.idea/
 
 # VS Code
 .vscode/
@@ -77,6 +78,9 @@ target/
 
 # exclude data from source control by default
 src/data/
+
+# exclude docs
+docs/
 
 # Mac OS-specific storage files
 .DS_Store
