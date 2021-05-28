@@ -19,7 +19,7 @@ def features(df):
     df = df.drop(columns=categorical_features).join(encoded)
 
     # list all numerical features that we want to re-scale
-    numeric_features = ['count_floors_pre_eq', 'area_percentage', 'height_percentage', 'count_families']
+    numeric_features = ['count_floors_pre_eq', 'count_families']
     df[numeric_features] = MinMaxScaler().fit_transform(df[numeric_features])
 
     return df
@@ -164,6 +164,20 @@ def feature_engineering(df, geo_district_nu):
     df['low_percentage_r'] = column_low
     df['high_percentage_r'] = column_high
 
+    fragile = ['other_floor_type_q', 'foundation_type_r',
+               'ground_floor_type_f']
+    stable = ['ground_floor_type_v', 'other_floor_type_j', 'foundation_type_w',
+              'has_superstructure_cement_mortar_brick', 'roof_type_x']
+
+    for feature in fragile:
+        df.loc[df[feature] == 1, 'fragile'] = 1
+
+    for feature in stable:
+        df.loc[df[feature] == 1, 'stable'] = 1
+
+    df[['fragile', 'stable']] = df[['fragile', 'stable']].fillna(0)
+
+    """
     # Creation of dummy features for stable and fragile constructions
     # create fragile construction dummy
     df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 1) & (
@@ -200,10 +214,11 @@ def feature_engineering(df, geo_district_nu):
             df['roof_type_x'] == 1), 'stable'] = 0
     df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 0) & (
             df['roof_type_x'] == 0), 'stable'] = 0
+    """
 
     # Adding ft_importance 1
-    ft_importance_1_neg = ['has_superstructure_mud_mortar_stone', 'foundation_type_r', 'roof_type_n',
-                           'ground_floor_type_f','other_floor_type_q']
+    #ft_importance_1_neg = ['has_superstructure_mud_mortar_stone', 'foundation_type_r', 'roof_type_n',
+    #                       'ground_floor_type_f', 'other_floor_type_q']
     ft_importance_1_pos = ['has_superstructure_rc_non_engineered', 'has_superstructure_rc_engineered',
                            'has_secondary_use', 'has_secondary_use_hotel', 'foundation_type_u', 'foundation_type_w',
                            'roof_type_x', 'other_floor_type_s']
@@ -220,16 +235,25 @@ def feature_engineering(df, geo_district_nu):
            (df['other_floor_type_j'] == 1), 'ft_high_imp_1_pos'] = 1
 
     # feature importance 1 negative
-    df.loc[(df['has_superstructure_mud_mortar_stone'] == 1) | (df['foundation_type_r'] == 1) |
-           (df['roof_type_n'] == 1) | (df['ground_floor_type_f'] == 1) | (df['other_floor_type_q'] == 1),
-           'ft_imp_1_neg'] = 0
+    #df.loc[(df['has_superstructure_mud_mortar_stone'] == 1) | (df['foundation_type_r'] == 1) |
+    #       (df['roof_type_n'] == 1) | (df['ground_floor_type_f'] == 1) | (df['other_floor_type_q'] == 1),
+    #       'ft_imp_1_neg'] = 1
 
     # fill nans of positive feature importances with 0 & nans of negative feature importance with 1
-    df[['ft_imp_1_pos', 'ft_high_imp_1_pos']] = df[['ft_imp_1_pos', 'ft_high_imp_1_pos']].fillna(0)
-    df['ft_imp_1_neg'] = df['ft_imp_1_neg'].fillna(1)
+    df[['ft_imp_1_pos', 'ft_high_imp_1_pos']] = \
+        df[['ft_imp_1_pos', 'ft_high_imp_1_pos']].fillna(0)
+    # df['ft_imp_1_neg'] = df['ft_imp_1_neg'].fillna(1)
+
+    df['area_vs_height'] = df['area_percentage'] / df['height_percentage']
+    df['family_vs_area'] = df['count_families'] / df['area_percentage']
+    df['dens_1'] = df.groupby('geo_level_1_id')['geo_level_1_id'].transform('size')
+    df['dens_2'] = df.groupby('geo_level_2_id')['geo_level_2_id'].transform('size')
+    df['dens_3'] = df.groupby('geo_level_3_id')['geo_level_3_id'].transform('size')
 
     # rescale age and geo_features after generating dummy features
-    scale_features = ['geo_level_2_id', 'geo_level_3_id', 'age']
+    scale_features = ['geo_level_2_id', 'geo_level_3_id', 'area_percentage', 'height_percentage',
+                      'area_vs_height', 'family_vs_area', 'dens_1', 'dens_2', 'dens_3','age']
+
     df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
 
     # list all categorical features that we want to encode using OneHotEncoder
@@ -259,7 +283,7 @@ def get_unnecessary_ft(df):
 
     for i in range(df.shape[0]):  # iterate through rows
         liste = []
-        for j in range(df.shape[1]):  #iterate through columns
+        for j in range(df.shape[1]):  # iterate through columns
             value = df.iloc[i, j]
             if value > 0.01:
                 liste.append(value)
