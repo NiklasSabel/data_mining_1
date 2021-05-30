@@ -244,24 +244,24 @@ def feature_engineering(df, geo_district_nu):
         df[['ft_imp_1_pos', 'ft_high_imp_1_pos']].fillna(0)
     # df['ft_imp_1_neg'] = df['ft_imp_1_neg'].fillna(1)
 
-    df['area_vs_height'] = df['area_percentage'] / df['height_percentage']
-    df['family_vs_area'] = df['count_families'] / df['area_percentage']
+    #df['area_vs_height'] = df['area_percentage'] / df['height_percentage']
+    #df['family_vs_area'] = df['count_families'] / df['area_percentage']
     df['dens_1'] = df.groupby('geo_level_1_id')['geo_level_1_id'].transform('size')
     df['dens_2'] = df.groupby('geo_level_2_id')['geo_level_2_id'].transform('size')
     df['dens_3'] = df.groupby('geo_level_3_id')['geo_level_3_id'].transform('size')
 
     # rescale age and geo_features after generating dummy features
-    scale_features = ['geo_level_2_id', 'geo_level_3_id', 'area_percentage', 'height_percentage',
-                      'area_vs_height', 'family_vs_area', 'dens_1', 'dens_2', 'dens_3','age']
+    scale_features = [ 'geo_level_2_id', 'geo_level_3_id', 
+                       'dens_2', 'dens_3']
 
     df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
 
     # list all categorical features that we want to encode using OneHotEncoder
     categorical_features = ['geo_level_1_id']
-    encoder = OneHotEncoder()
-    encoded = pd.DataFrame(encoder.fit_transform(df[categorical_features]).toarray(),
-                           columns=encoder.get_feature_names(categorical_features))
-    df = df.drop(columns=categorical_features).join(encoded)
+    #encoder = OneHotEncoder()
+    #encoded = pd.DataFrame(encoder.fit_transform(df[categorical_features]).toarray(),
+    #                       columns=encoder.get_feature_names(categorical_features))
+    #df = df.drop(columns=categorical_features).join(encoded)
 
     return df
 
