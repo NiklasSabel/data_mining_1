@@ -185,8 +185,11 @@ def feature_engineering(df):
     df['dens_2'] = df.groupby('geo_level_2_id')['geo_level_2_id'].transform('size')
     df['dens_3'] = df.groupby('geo_level_3_id')['geo_level_3_id'].transform('size')
 
-    # rescale age and geo_features after generating dummy features, except geo_level_1_id
-    scale_features = ['geo_level_2_id', 'geo_level_3_id', 'dens_1', 'dens_2', 'dens_3']
+    # rescale age and geo_features after generating dummy features
+
+    scale_features = ['geo_level_2_id', 'geo_level_3_id', 'area_percentage', 'height_percentage',
+                       'dens_1', 'dens_2', 'dens_3','age']
+
 
     df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
 
