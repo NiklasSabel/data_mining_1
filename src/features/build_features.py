@@ -43,7 +43,7 @@ def split_data(df):
     return train_data, train_target, test_data
 
 
-def feature_engineering(df, geo_district_nu):
+def feature_engineering(df):
     """
     Function to generate additional features.
     :param df: merged dataframe of preprocessed train, test and target data
@@ -51,42 +51,24 @@ def feature_engineering(df, geo_district_nu):
     """
 
     # Creation of dummy features degree of destruction of the different districts
-    if geo_district_nu == 3:
 
-        district_class_1 = [6, 10, 13, 20, 26]
-        district_class_2 = [3, 4, 6, 7, 8, 10, 11, 13, 20, 21, 22, 25, 26, 27]
-        district_class_3 = [6, 7, 8, 10, 11, 17, 21, 27]
+    district_class_1 = [2, 14, 15, 19, 23, 28, 29]
+    district_class_2 = [0, 1, 5, 12, 16, 18, 24, 30]
+    district_class_3 = [4, 20, 26]
+    district_class_4 = [6, 7, 8, 10, 17, 21]
 
-        for i in range(1, 31):
-            if i in district_class_1:
-                df.loc[df['geo_level_1_id'] == i, 'district_class_1'] = 1
-            elif i in district_class_2:
-                df.loc[df['geo_level_1_id'] == i, 'district_class_2'] = 1
-            elif i in district_class_3:
-                df.loc[df['geo_level_1_id'] == i, 'district_class_3'] = 1
+    for i in range(1, 31):
+        if i in district_class_1:
+            df.loc[df['geo_level_1_id'] == i, 'district_class_1'] = 1
+        elif i in district_class_2:
+            df.loc[df['geo_level_1_id'] == i, 'district_class_2'] = 1
+        elif i in district_class_3:
+            df.loc[df['geo_level_1_id'] == i, 'district_class_3'] = 1
+        elif i in district_class_4:
+            df.loc[df['geo_level_1_id'] == i, 'district_class_4'] = 1
 
-        df[['district_class_1', 'district_class_2', 'district_class_3']] = \
-            df[['district_class_1', 'district_class_2', 'district_class_3']].fillna(0)
-
-    elif geo_district_nu == 4:
-
-        district_class_1 = [2, 14, 15, 19, 23, 28, 29]
-        district_class_2 = [0, 1, 5, 12, 16, 18, 24, 30]
-        district_class_3 = [4, 20, 26]
-        district_class_4 = [6, 7, 8, 10, 17, 21]
-
-        for i in range(1, 31):
-            if i in district_class_1:
-                df.loc[df['geo_level_1_id'] == i, 'district_class_1'] = 1
-            elif i in district_class_2:
-                df.loc[df['geo_level_1_id'] == i, 'district_class_2'] = 1
-            elif i in district_class_3:
-                df.loc[df['geo_level_1_id'] == i, 'district_class_3'] = 1
-            elif i in district_class_4:
-                df.loc[df['geo_level_1_id'] == i, 'district_class_4'] = 1
-
-        df[['district_class_1', 'district_class_2', 'district_class_3', 'district_class_4']] = \
-            df[['district_class_1', 'district_class_2', 'district_class_3', 'district_class_4']].fillna(0)
+    df[['district_class_1', 'district_class_2', 'district_class_3', 'district_class_4']] = \
+        df[['district_class_1', 'district_class_2', 'district_class_3', 'district_class_4']].fillna(0)
 
     # Creation of dummy features on the age of the buildings
     df.loc[(df['age'] <= 40), 'age_u_40'] = 1
@@ -164,6 +146,7 @@ def feature_engineering(df, geo_district_nu):
     df['low_percentage_r'] = column_low
     df['high_percentage_r'] = column_high
 
+    # creation of feature fragile with bad building material and stable with good building material
     fragile = ['other_floor_type_q', 'foundation_type_r',
                'ground_floor_type_f']
     stable = ['ground_floor_type_v', 'other_floor_type_j', 'foundation_type_w',
@@ -177,48 +160,7 @@ def feature_engineering(df, geo_district_nu):
 
     df[['fragile', 'stable']] = df[['fragile', 'stable']].fillna(0)
 
-    """
-    # Creation of dummy features for stable and fragile constructions
-    # create fragile construction dummy
-    df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 1) & (
-            df['ground_floor_type_f'] == 1), 'fragile'] = 1
-    df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 1) & (
-            df['ground_floor_type_f'] == 0), 'fragile'] = 1
-    df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 0) & (
-            df['ground_floor_type_f'] == 1), 'fragile'] = 1
-    df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 1) & (
-            df['ground_floor_type_f'] == 1), 'fragile'] = 1
-    df.loc[(df['foundation_type_r'] == 1) & (df['other_floor_type_q'] == 0) & (
-            df['ground_floor_type_f'] == 0), 'fragile'] = 0
-    df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 1) & (
-            df['ground_floor_type_f'] == 0), 'fragile'] = 0
-    df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 0) & (
-            df['ground_floor_type_f'] == 1), 'fragile'] = 0
-    df.loc[(df['foundation_type_r'] == 0) & (df['other_floor_type_q'] == 0) & (
-            df['ground_floor_type_f'] == 0), 'fragile'] = 0
-
-    # create stable construction dummy
-    df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 1) & (
-            df['roof_type_x'] == 1), 'stable'] = 1
-    df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 1) & (
-            df['roof_type_x'] == 0), 'stable'] = 1
-    df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 0) & (
-            df['roof_type_x'] == 1), 'stable'] = 1
-    df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 1) & (
-            df['roof_type_x'] == 1), 'stable'] = 1
-    df.loc[(df['foundation_type_i'] == 1) & (df['ground_floor_type_v'] == 0) & (
-            df['roof_type_x'] == 0), 'stable'] = 0
-    df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 1) & (
-            df['roof_type_x'] == 0), 'stable'] = 0
-    df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 0) & (
-            df['roof_type_x'] == 1), 'stable'] = 0
-    df.loc[(df['foundation_type_i'] == 0) & (df['ground_floor_type_v'] == 0) & (
-            df['roof_type_x'] == 0), 'stable'] = 0
-    """
-
-    # Adding ft_importance 1
-    #ft_importance_1_neg = ['has_superstructure_mud_mortar_stone', 'foundation_type_r', 'roof_type_n',
-    #                       'ground_floor_type_f', 'other_floor_type_q']
+    # Adding ft_importance 1 --> features that are rather stable so that the damage grade is mostly 1
     ft_importance_1_pos = ['has_superstructure_rc_non_engineered', 'has_superstructure_rc_engineered',
                            'has_secondary_use', 'has_secondary_use_hotel', 'foundation_type_u', 'foundation_type_w',
                            'roof_type_x', 'other_floor_type_s']
@@ -234,34 +176,19 @@ def feature_engineering(df, geo_district_nu):
     df.loc[(df['has_superstructure_cement_mortar_brick'] == 1) | (df['ground_floor_type_v'] == 1) |
            (df['other_floor_type_j'] == 1), 'ft_high_imp_1_pos'] = 1
 
-    # feature importance 1 negative
-    #df.loc[(df['has_superstructure_mud_mortar_stone'] == 1) | (df['foundation_type_r'] == 1) |
-    #       (df['roof_type_n'] == 1) | (df['ground_floor_type_f'] == 1) | (df['other_floor_type_q'] == 1),
-    #       'ft_imp_1_neg'] = 1
-
     # fill nans of positive feature importances with 0 & nans of negative feature importance with 1
     df[['ft_imp_1_pos', 'ft_high_imp_1_pos']] = \
         df[['ft_imp_1_pos', 'ft_high_imp_1_pos']].fillna(0)
-    # df['ft_imp_1_neg'] = df['ft_imp_1_neg'].fillna(1)
 
-    #df['area_vs_height'] = df['area_percentage'] / df['height_percentage']
-    #df['family_vs_area'] = df['count_families'] / df['area_percentage']
+    # add feature with the population density in every geo_level_id
     df['dens_1'] = df.groupby('geo_level_1_id')['geo_level_1_id'].transform('size')
     df['dens_2'] = df.groupby('geo_level_2_id')['geo_level_2_id'].transform('size')
     df['dens_3'] = df.groupby('geo_level_3_id')['geo_level_3_id'].transform('size')
 
-    # rescale age and geo_features after generating dummy features
-    scale_features = [ 'geo_level_2_id', 'geo_level_3_id', 
-                       'dens_2', 'dens_3']
+    # rescale age and geo_features after generating dummy features, except geo_level_1_id
+    scale_features = ['geo_level_2_id', 'geo_level_3_id', 'dens_1', 'dens_2', 'dens_3']
 
     df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
-
-    # list all categorical features that we want to encode using OneHotEncoder
-    categorical_features = ['geo_level_1_id']
-    #encoder = OneHotEncoder()
-    #encoded = pd.DataFrame(encoder.fit_transform(df[categorical_features]).toarray(),
-    #                       columns=encoder.get_feature_names(categorical_features))
-    #df = df.drop(columns=categorical_features).join(encoded)
 
     return df
 
@@ -301,5 +228,28 @@ def drop_unnecessary_ft(df):
     """
 
     df = df.drop(columns=get_unnecessary_ft(df), axis=1)
+
+    return df
+
+
+def drop_correlated_features(df, thr=0.8):
+    """
+    Function to detect all correlated features
+    :param df: general dataframe and threshold for the correlation param
+    :return: dataframe without correlated features
+    """
+    correlated_features = set()
+    correlation_matrix = df.corr()
+
+    for i in range(len(correlation_matrix.columns)):
+        for j in range(i):
+            if abs(correlation_matrix.iloc[i, j]) > thr:
+                print(
+                    f"The following features are correlated: {correlation_matrix.columns[i]} and {correlation_matrix.columns[j]}. Correlation = {round(abs(correlation_matrix.iloc[i, j]), 2)}")
+                colname = correlation_matrix.columns[j]
+                correlated_features.add(colname)
+    print(f"Drop the following features: {correlated_features}")
+    # drop correlated features
+    df = df.drop(columns=correlated_features)
 
     return df
