@@ -188,7 +188,7 @@ def feature_engineering(df):
     # rescale age and geo_features after generating dummy features
 
     scale_features = ['geo_level_2_id', 'geo_level_3_id', 'area_percentage', 'height_percentage',
-                       'dens_1', 'dens_2', 'dens_3','age']
+                       'dens_1', 'dens_2', 'dens_3']
 
 
     df[scale_features] = MinMaxScaler().fit_transform(df[scale_features])
