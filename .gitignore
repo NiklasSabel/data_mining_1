@@ -87,3 +87,4 @@ src/data/
 
 # Mypy cache
 .mypy_cache/
+notebooks/Baseline_models_JH.ipynb
